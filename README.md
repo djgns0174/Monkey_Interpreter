@@ -1,36 +1,112 @@
-# Monkey_Interpreter
+# 1. 렉싱 (Lexing)
 
-## 1. 렉싱
+## 정의
 
-- 정의 :  “구문 → 토큰 → 추상구문트리” 에서 구문→트리 로 변환하는 과정
-- 렉서 구조체 : 현재 읽고있는 문자의 포지션, 다음 읽을 문자 포지션, 현재 가르키고 있는 문자, input
-- 토큰 구조체 : 타입과 리터럴이 존재하고 리터럴은 string으로 설정(모든 타입을 받을 수 있고 복잡도를 낮추기 위함)
-- 렉서를 먼저 생성한 뒤 생성됨과 동시에 readch 메서드를 호출해 구문의 첫번째 문자를 읽고 구조체의 멤버변수를 초기화한다.
-- nextToken 메서드를 호출해서 식별자인지 예약어인지 정수인지 switch안에 if문으로 각각을 구별하고 토큰으로 분리한다.
-- 식별자인지 예약어인지 → 특수문자(공백)이 나올때까지 문자를 읽으면서 문자인지 판별한뒤(IsLetter) 해당 자리까지 글자를 변수에 담은 뒤(ReadIdentifier) 해당 글자가 예약어인지 이미 존재하는 맵에 비교한 후 판별한다. (ReadIdentifier)
-- 정수인지 → 정수가 끝날때까지 문자를 읽으면서 정수인지 판별한 뒤(isDigit) 해당 자리까지 정수를 변수에 담는다. (ReadNumber)
-- 공백처리함수, 스위치문에서 EQ(==)와 NOT_EQ(≠) 처리, {if, return, else, false, function} 등등 다양한 예약어 지원, REPL 구현 후 테스트가 즉각적으로 이루어지는지
+- "구문 → 토큰 → 추상구문트리"에서 **구문 → 토큰**으로 변환하는 과정
+- 소스 코드를 읽고 의미 있는 단위(토큰)로 분리하는 역할
 
-## 2. 파싱
+## 렉서 구조체
 
-- 정의 : 토큰 → 추상구문트리로 변환시켜주는 프로그램
-- 파서 제너레이터 → 문법을 입력하면 자동으로 파서를 생성해주는 소프트웨어
-- Let문 파싱 → let <identifier> = <expression> 으로 구성되어 있음.
-    - 그러므로 필드는 identifier, expression이 필요하고 렉서에서 개발한 token.Let도 필드로 가져야 한
-    
-    ```go
-    type LetStatement struct{
-    	Token token.Token
-    	Name *Identifier
-    	value Expression
+- **현재 읽고 있는 문자의 포지션**
+- **다음 읽을 문자의 포지션**
+- **현재 가리키고 있는 문자**
+- **입력 문자열 (input)**
+
+## 토큰 구조체
+
+- **타입(Token Type)과 리터럴(Literal) 필드로 구성**
+- 리터럴은 `string` 타입을 사용하여 모든 타입을 수용하고 복잡도를 낮춤
+
+## 렉서 동작 과정
+
+1. **렉서 초기화**
+    - `readChar` 메서드를 호출하여 첫 번째 문자를 읽고, 구조체의 멤버 변수를 초기화함
+2. **토큰 분리 (nextToken 메서드 실행)**
+    - **식별자 or 예약어**: 공백이나 특수문자가 나올 때까지 문자를 읽고, 예약어 맵과 비교하여 판별 (`ReadIdentifier`)
+    - **정수인지 판별**: 숫자가 끝날 때까지 읽고 저장 (`ReadNumber`)
+    - **연산자 판별**: `==`, `!=` 등의 연산자 처리
+    - **공백 제거**
+3. **REPL 구현 후 테스트 수행**
+
+---
+
+# 2. 파싱 (Parsing)
+
+## 정의
+
+- **토큰 → 추상구문트리(AST)** 로 변환하는 과정
+- 프로그램의 문법을 분석하고, 구조적인 표현(AST)으로 변환하는 역할
+
+## 파서 제너레이터
+
+- 문법을 입력하면 자동으로 파서를 생성해주는 소프트웨어
+
+## Let문 파싱 (`let <identifier> = <expression>`)
+
+- 필드: **식별자(Identifier)**, **표현식(Expression)**, **let 토큰**
+
+### `LetStatement` 구조체
+
+```
+    type LetStatement struct {
+        Token token.Token // 'let' 토큰
+        Name  *Identifier // 식별자 (변수명)
+        Value Expression  // 값 (표현식)
     }
-    ```
-    
-- 파서 → p.nextToken() 를 두번 호출하는 이유는 한번만 호출하면 curToken이 빈값이 들어가고 peekToken이 첫번째 토큰이 들어가기 때문에 한번 더 호출해서 제대로 값을 설정해준다.
-- 파서 프로그램의 진입점 : ParseProgram()
-    - ParseProgram은 루트노드와 statment의 슬라이스를 초기화 시킨 뒤 토큰을 순차적으로 가져와서 let문이라면 let파싱, return 이라면 return파싱을 수행한다.
-- parseLetStatement() : let문 파싱
-    - 현재 위치에 있는 토큰으로 LetStatement 노드를 만듦
-    - 다음토큰이 식별자인지 판별 (아니면 error추가)
-    - Identifier 노드를 생성
-    - 다음토큰이 등호인지 판별 (아니면 error 추가)
+```
+
+✅ **각 필드의 값 예시:**
+
+| 필드명 | 값 (예시) | 설명 |
+| --- | --- | --- |
+| `Token` | `{Type: token.LET, Literal: "let"}` | `let` 토큰을 저장 |
+| `Name` | `&Identifier{Token: {Type: token.IDENT, Literal: "x"}, Value: "x"}` | 변수명 `x`를 저장 |
+| `Value` | `&IntegerLiteral{Token: {Type: token.INT, Literal: "5"}, Value: 5}` | 값 `5`를 저장 |
+
+### `Identifier` 구조체
+
+```
+    type Identifier struct {
+        Token token.Token // 식별자 토큰 (변수명)
+        Value string      // 실제 변수명
+    }
+```
+
+✅ **각 필드의 값 예시:**
+
+| 필드명 | 값 (예시) | 설명 |
+| --- | --- | --- |
+| `Token` | `{Type: token.IDENT, Literal: "x"}` | 변수명 `x`의 토큰 |
+| `Value` | `"x"` | 실제 변수명 |
+
+## 파서 동작 과정
+
+### `p.nextToken()`을 두 번 호출하는 이유
+
+- **한 번만 호출하면 `curToken`이 빈 값이 되고, `peekToken`이 첫 번째 토큰이 됨**
+- 두 번 호출해야 `curToken`과 `peekToken`이 올바르게 초기화됨
+
+### 파서 프로그램의 진입점: `ParseProgram()`
+
+1. **루트 노드(`Program`)와 `Statement` 슬라이스 초기화**
+2. **현재 토큰이 `let`인지, `return`인지 판별**
+    - `let`이면 `parseLetStatement()` 호출
+    - `return`이면 `parseReturnStatement()` 호출
+
+### `parseLetStatement()`
+
+1. **현재 위치의 토큰을 이용해 `LetStatement` 노드 생성**
+2. **다음 토큰이 식별자인지 판별** (아니면 오류 추가)
+3. **Identifier 노드 생성**
+4. **다음 토큰이 `=`인지 판별** (아니면 오류 추가)
+
+## 전체적인 파싱 로직 순서
+
+1. **`ParseProgram()`** → 루트 노드 및 `Statement` 슬라이스 초기화
+2. **`parseStatement()`** → 현재 토큰이 `let`, `return` 등인지 판별하여 분기 처리
+3. **`parseLetStatement()`** → `Token`, `Identifier`, `Expression`을 저장하고 문법 오류 처리
+4. **`ParseProgram()`** → `Statement`를 슬라이스에 추가 후, 다음 `Statement` 파싱 수행
+
+---
+
+✅ **이렇게 구현하면 `let x = 5; let y = 10;` 같은 코드가 올바르게 AST로 변환됨!**
