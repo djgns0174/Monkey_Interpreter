@@ -15,6 +15,7 @@ func TestLetStatements(t *testing.T) {
 	p := New(l)
 
 	program := p.ParserProgram()
+	checkParserErrors(t, p)
 	if program == nil {
 		t.Fatalf("ParserProgram() returned nil")
 	}
@@ -55,10 +56,23 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 		return false
 	}
 
-	if letStmt.Name.TokenLiteral() != name { //이게 뭐하는것인지 파악해야됨.
+	if letStmt.Name.TokenLiteral() != name {
 		t.Errorf("letStmt.Name.TokenLiteral() not '%s'. got=%s", name, letStmt.Name.TokenLiteral())
 		return false
 	}
 
 	return true
+}
+
+func checkParserErrors(t *testing.T, p *Parser) {
+	errors := p.errors
+	if len(errors) == 0 {
+		return
+	}
+
+	t.Errorf("parser has %d errors", len(errors))
+	for _, msg := range errors {
+		t.Errorf("parser error:%q", msg)
+	}
+	t.FailNow()
 }
