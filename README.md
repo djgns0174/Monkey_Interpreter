@@ -107,6 +107,37 @@
 3. **`parseLetStatement()`** → `Token`, `Identifier`, `Expression`을 저장하고 문법 오류 처리
 4. **`ParseProgram()`** → `Statement`를 슬라이스에 추가 후, 다음 `Statement` 파싱 수행
 
+✅ **이렇게 구현하면 `let x = 5; let y = 10;` 같은 코드가 올바르게 AST로 변환됨!**
+
 ---
 
-✅ **이렇게 구현하면 `let x = 5; let y = 10;` 같은 코드가 올바르게 AST로 변환됨!**
+## - 전위 연산자 파싱 (`<operator>` `<Expression>`)
+
+## `PrefixExpression` 구조체
+
+```go
+    type PrefixExpression struct {
+        Token    token.Token
+        Operator string
+        Right    Expression
+    }
+
+```
+
+✅ **구성 요소**
+
+- `Token`: 연산자 토큰 (, `!` 등)
+- `Operator`: 연산자 기호 (, `!` 등 문자열 형태)
+- `Right`: 연산 대상 (`Expression` 타입으로 식별자, 정수 리터럴 등 포함 가능)
+
+## 파싱 로직 순서
+
+1. **`ParseProgram()`** → 파싱 프로그램 생성
+2. **`ParseStatement()`** → 토큰에 따라 노드 생성 처리 분기
+3. **`parseExpressionStatement()`** → `ExpressionStatement` 생성
+4. **`parsePrefixExpression()`** → 토큰 타입에 따라 파싱 함수 호출 후, `Right`에 대한 토큰 타입에 따라 재귀적으로 파싱 함수 호출
+5. **`parseExpression()`** → 정수 리터럴 또는 식별자에 대한 `Expression` 생성
+
+✅ **이렇게 구현하면 `-5` 또는 `!true` 같은 코드가 올바르게 AST로 변환됨!**
+
+---
