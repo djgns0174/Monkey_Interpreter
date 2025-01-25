@@ -157,36 +157,35 @@ func TestIntegerLiteralExperssion(t *testing.T) {
 	}
 }
 
-//전위연산자 테스트 진행해야됨.
-// func TestParsingPrefixExpressions(t *testing.T){
-// 	prefixTests := []struct{
-// 		input string
-// 		operator string
-// 		integerValue int64
-// 	}{
-// 		{"!5", "!", 5},
-// 		{"-15", "-", 15},
-// 	}
+func TestParsingPrefixExpressions(t *testing.T) {
+	prefixTests := []struct {
+		input        string
+		operator     string
+		integerValue int64
+	}{
+		{"!5", "!", 5},
+		{"-15", "-", 15},
+	}
 
-// 	for _, tt:=range prefixTests{
-// 		l:=lexer.New(tt.input)
-// 		p:=New(l)
-// 		program:=p.ParserProgram()
-// 		checkParserErrors(t, p)
+	for _, tt := range prefixTests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParserProgram()
+		checkParserErrors(t, p)
 
-// 		if len(program.Statements) != 1{
-// 			t.Fatalf("program.Statements does not contain %d statement. got=%d", 1, len(program.Statements))
-// 		}
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statement. got=%d", 1, len(program.Statements))
+		}
 
-// 		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-// 		if !ok{
-// 			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%d", program.Statements[0])
-// 		}
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%d", program.Statements[0])
+		}
 
-// 		exp := stmt.Expression
+		exp := stmt.Expression
 
-// 		if exp.operator != tt.operator{
+		if exp.operator != tt.operator {
 
-// 		}
-// 	}
-// }
+		}
+	}
+}
