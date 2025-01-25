@@ -32,27 +32,28 @@
 
 # 2. 파싱 (Parsing)
 
-## 정의
+## - 정의
 
 - **토큰 → 추상구문트리(AST)** 로 변환하는 과정
 - 프로그램의 문법을 분석하고, 구조적인 표현(AST)으로 변환하는 역할
 
-## 파서 제너레이터
+## - 파서 제너레이터
 
 - 문법을 입력하면 자동으로 파서를 생성해주는 소프트웨어
 
-## Let문 파싱 (`let <identifier> = <expression>`)
+## - Let문 파싱 (`let <identifier> = <expression>`)
 
 - 필드: **식별자(Identifier)**, **표현식(Expression)**, **let 토큰**
 
 ### `LetStatement` 구조체
 
-```
+```go
     type LetStatement struct {
         Token token.Token // 'let' 토큰
         Name  *Identifier // 식별자 (변수명)
         Value Expression  // 값 (표현식)
     }
+
 ```
 
 ✅ **각 필드의 값 예시:**
@@ -65,11 +66,12 @@
 
 ### `Identifier` 구조체
 
-```
+```go
     type Identifier struct {
         Token token.Token // 식별자 토큰 (변수명)
         Value string      // 실제 변수명
     }
+
 ```
 
 ✅ **각 필드의 값 예시:**
@@ -79,7 +81,7 @@
 | `Token` | `{Type: token.IDENT, Literal: "x"}` | 변수명 `x`의 토큰 |
 | `Value` | `"x"` | 실제 변수명 |
 
-## 파서 동작 과정
+### 파서 동작 과정
 
 ### `p.nextToken()`을 두 번 호출하는 이유
 
@@ -100,14 +102,12 @@
 3. **Identifier 노드 생성**
 4. **다음 토큰이 `=`인지 판별** (아니면 오류 추가)
 
-## 전체적인 파싱 로직 순서
+### 전체적인 파싱 로직 순서
 
 1. **`ParseProgram()`** → 루트 노드 및 `Statement` 슬라이스 초기화
 2. **`parseStatement()`** → 현재 토큰이 `let`, `return` 등인지 판별하여 분기 처리
 3. **`parseLetStatement()`** → `Token`, `Identifier`, `Expression`을 저장하고 문법 오류 처리
 4. **`ParseProgram()`** → `Statement`를 슬라이스에 추가 후, 다음 `Statement` 파싱 수행
-
-✅ **이렇게 구현하면 `let x = 5; let y = 10;` 같은 코드가 올바르게 AST로 변환됨!**
 
 ---
 
@@ -135,9 +135,40 @@
 1. **`ParseProgram()`** → 파싱 프로그램 생성
 2. **`ParseStatement()`** → 토큰에 따라 노드 생성 처리 분기
 3. **`parseExpressionStatement()`** → `ExpressionStatement` 생성
-4. **`parsePrefixExpression()`** → 토큰 타입에 따라 파싱 함수 호출 후, `Right`에 대한 토큰 타입에 따라 재귀적으로 파싱 함수 호출
-5. **`parseExpression()`** → 정수 리터럴 또는 식별자에 대한 `Expression` 생성
+4. **`parseExpression()`  → 5번 메소드 호출**
+5. **`parsePrefixExpression()`** → 토큰 타입에 따라 파싱 함수 호출 후, `Right`에 대한 토큰 타입에 따라 재귀적으로 파싱 함수 호출
+6. **`parseExpression()`** → 정수 리터럴 또는 식별자에 대한 `Expression` 생성
 
 ✅ **이렇게 구현하면 `-5` 또는 `!true` 같은 코드가 올바르게 AST로 변환됨!**
 
 ---
+
+## - 중위 연산자 파싱
+
+## `InfixExpression` 구조체
+
+```go
+type InfixExpression struct {
+	Token    token.Token
+	Left     Expression
+	Operator string
+	Right    Expression
+}
+```
+
+✅ **구성 요소**
+
+- `Token`: 연산자 토큰 (, `!` 등)
+- `Left`: 연산 대상 (`Expression` 타입으로 식별자, 정수 리터럴 등 포함 가능)
+- `Operator`: 연산자 기호 (, `!` 등 문자열 형태)
+- `Right`: 연산 대상 (`Expression` 타입으로 식별자, 정수 리터럴 등 포함 가능)
+
+## 파싱 로직 순서
+
+1. **`ParseProgram()`** → 파싱 프로그램 생성
+2. **`ParseStatement()`** → 토큰에 따라 노드 생성 처리 분기
+3. **`parseExpressionStatement()`** → `ExpressionStatement` 생성
+4. **`parseExpression()`  → “5+5”가 들어왔다면 5를 먼저 처리하는 `parsePrefixExpression()` 를 호출 후 다음토큰이 세미콜론이 아니면 `parseInfixExpression()` 호출해서 중위표현식 파싱 (연산자 우선순위를 비교하여 재귀적으로 Right 값을 설정함)**
+5. **`parseExpression()`** → 정수 리터럴 또는 식별자에 대한 `Expression` 생성
+
+✅ **이렇게 구현하면 `5+5*4` 같은 코드가 올바르게 AST로 변환됨!**
