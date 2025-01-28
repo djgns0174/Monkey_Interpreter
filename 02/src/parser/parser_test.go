@@ -367,3 +367,44 @@ func testInfixExpression(t *testing.T, exp ast.Expression,
 
 	return true
 }
+
+func TestIfExpression(t *testing.T) {
+
+	tests := []struct {
+		input string
+	}{
+		{"if (x < y) { x }"},
+		{"if (x < y) { x } else { y }"},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParserProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d\n", 1, len(program.Statements))
+		}
+
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		exp := stmt.Expression.(*ast.IfExpression)
+		if !testInfixExpression(t, exp.Condition, "x", "<", "y") {
+			return
+		}
+
+		if len(exp.Consequence.Statements) != 1 {
+			t.Errorf("consequence is not 1 statemtents. got=%d\n", len(exp.Consequence.Statements))
+		}
+
+		consequence := exp.Consequence.Statements[0].(*ast.ExpressionStatement)
+
+		if !testIdentifier(t, consequence.Expression, "x") {
+			return
+		}
+
+		if exp.Alternative != nil {
+			t.Errorf("exp.Alternative.Statements was not nil. got=%+v", exp.Alternative)
+		}
+	}
+}
