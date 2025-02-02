@@ -1,4 +1,4 @@
-package object
+package object //함수 환경에 대해서 다시 살펴보고 디버깅으로 구조 및 원리 파악
 
 import (
 	"fmt"
