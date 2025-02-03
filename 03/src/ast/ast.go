@@ -200,7 +200,7 @@ func (fl *FunctionLiteral) String() string {
 	out.WriteString("(")
 	out.WriteString(strings.Join(params, ", "))
 	out.WriteString(")")
-	out.WriteString(fl.Body.String()) // {} 이 어떻게 파싱이 되면 중괄호를 추가하지 않아도 되는지 파악.
+	out.WriteString(fl.Body.String())
 
 	return out.String()
 }
